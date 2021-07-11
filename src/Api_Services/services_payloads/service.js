@@ -20,6 +20,6 @@ export const analytics = (data) =>{
 export const contents =(data) =>{
     let url = urls.CDN.FIND_FOLDER ;
     let method = urls.method.POST;
-    let actionCode ='';
+    let actionCode = "ACTION_FIND_RESOURCE";
     return executePost(url, actionCode, data, method , false)
 }

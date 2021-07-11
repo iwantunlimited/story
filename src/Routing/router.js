@@ -7,7 +7,7 @@ export const routes =[
         component: Dashboard,
     },
     {
-        path: '/folder/:id',
+        path: '/:id',
         component: Dashboard,
     },
     {

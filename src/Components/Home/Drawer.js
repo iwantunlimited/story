@@ -5,19 +5,17 @@ import {
     Divider,
     IconButton,
     Toolbar,
-    Typography
+    Typography, ListItemButton, Collapse, Tooltip
 } from "@material-ui/core";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import {experimentalStyled as styled} from "@material-ui/core/styles";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import ListItemText from "@material-ui/core/ListItemText";
-import ListItem from "@material-ui/core/ListItem";
-import TreeView from '@material-ui/lab/TreeView';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import TreeItem from '@material-ui/lab/TreeItem';
 import {withRouter} from "react-router";
+import Context from "../../Api_Services/Context";
+import {contents} from "../../Api_Services/services_payloads/service";
+import {ExpandLess, ExpandMore, Folder, FolderOpen} from "@material-ui/icons";
 
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
     ({ theme, open , drawerwidth:drawerWidth }) => ({
@@ -46,6 +44,27 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 function DrawerComponent(props) {
+    const context = React.useContext(Context)
+    const {contentApiPojo} = context
+    const [listFolder , setListFolder] = React.useState([])
+    const [openMenu, setOpen] = React.useState(true);
+
+    const handleClick = () => {
+        setOpen(!openMenu);
+    };
+    const folderApiCall = React.useCallback((data)=>{
+        contents({...contentApiPojo, ...data}).then(
+            res =>{
+                if(res && res.content && res.content.length > 0){
+                    setListFolder(()=>(res.content))
+                }
+            }
+        )
+    },[contentApiPojo])
+
+    React.useEffect(()=>{
+        folderApiCall({"contentType": 'dir'})
+    },[folderApiCall])
 
     const {open , toggleDrawer , drawerWidth} = props
     return (
@@ -74,29 +93,50 @@ function DrawerComponent(props) {
 
             <Divider />
             <List>
-                <ListItem button>
+                <ListItemButton onClick={()=>{
+                    props.history.push('/root')
+                }}>
                     <ListItemIcon>
-                        <DashboardIcon />
+                        <Tooltip title={'Dashboard'} placement={'right'}>
+                            <DashboardIcon />
+                        </Tooltip>
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
-                </ListItem>
+                </ListItemButton>
+                <Divider/>
+                <ListItemButton onClick={handleClick}>
+                    <ListItemIcon>
+                        <Tooltip title={'Root Folder'} placement={'right'}>
+                            <Folder />
+                        </Tooltip>
+                    </ListItemIcon>
+                    <ListItemText primary="Folders" />
+                    {openMenu ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={openMenu} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                            {
+                                listFolder && listFolder.map((folder, index)=>(
+                                    <ListItemButton
+                                        sx={{ pl: 4 }}
+                                        key={index}
+                                        onClick={()=>{
+                                            props.history.push('/'+ folder.id)
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <Tooltip title={folder.name} placement={'right'}>
+                                                <FolderOpen />
+                                            </Tooltip>
+                                        </ListItemIcon>
+                                        <ListItemText primary={folder.name} />
+                                    </ListItemButton>
+                                ))
+                            }
+                    </List>
+                </Collapse>
             </List>
-            <TreeView
-                aria-label="file system navigator"
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                sx={{ height: 240, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}
-            >
-                <TreeItem nodeId="1" label="Applications">
-                    <TreeItem nodeId="2" label="Calendar" />
-                </TreeItem>
-                <TreeItem nodeId="5" label="Documents">
-                    <TreeItem nodeId="10" label="OSS" />
-                    <TreeItem nodeId="6" label="Material-UI">
-                        <TreeItem nodeId="8" label="index.js" />
-                    </TreeItem>
-                </TreeItem>
-            </TreeView>
+
         </Drawer>
     );
 }

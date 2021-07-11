@@ -41,7 +41,7 @@ function Login(props) {
         login(formData).then(res => {
             if(res && res['access_token']){
                 localStorage.setItem('token',res['access_token'])
-                props.history.push('/')
+                props.history.push('/root')
             }
         }).catch(err =>{
             console.log(err)
